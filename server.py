@@ -1,8 +1,8 @@
-"""Кыргызча TTS сервери (Meta MMS-TTS, facebook/mms-tts-kir).
-Иштетүү:  pip install fastapi uvicorn transformers torch scipy
-          uvicorn server:app --host 0.0.0.0 --port 8000
-Анан браузерден http://localhost:8000 ачыңыз."""
-import io, re
+"""Кыргызча TTS сервери (Meta MMS-TTS, facebook/mms-tts-kir)."""
+import io
+import re
+from pathlib import Path
+
 import numpy as np, torch
 from scipy.io import wavfile
 from fastapi import FastAPI, HTTPException
@@ -54,6 +54,10 @@ class Req(BaseModel):
 
 app = FastAPI()
 
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
 @app.post("/api/tts")
 def tts(req: Req):
     text = clean(req.text)[:2000]
@@ -70,4 +74,4 @@ def tts(req: Req):
     wavfile.write(buf, SR, np.concatenate(parts))
     return Response(buf.getvalue(), media_type="audio/wav")
 
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+app.mount("/", StaticFiles(directory=Path(__file__).parent, html=True), name="static")

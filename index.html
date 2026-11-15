@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кыргызча үн синтезатору</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&family=Noto+Serif:wght@600;700&display=swap&subset=cyrillic,cyrillic-ext" rel="stylesheet">
+<style>
+:root {
+  --snow: #f4f7fb;
+  --ink: #11263d;
+  --red: #d94d4a;
+  --gold: #f0b744;
+  --green: #2d6f5f;
+  --line: #dfe8f0;
+  --panel: rgba(255,255,255,0.9);
+  --panel-strong: #ffffff;
+  --shadow: 0 20px 60px rgba(17, 38, 61, 0.12);
+  --radius: 24px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root {
+    --snow: #0d1d2c;
+    --ink: #ebf1f6;
+    --line: #203548;
+    --panel: rgba(17, 38, 61, 0.85);
+    --panel-strong: #13293b;
+    --green: #8ad3bb;
+    --shadow: 0 24px 70px rgba(2, 7, 15, 0.45);
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(240,183,68,0.22), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(217,77,74,0.12), transparent 24%),
+    var(--snow);
+  color: var(--ink);
+  font: 17px/1.6 "Noto Sans", system-ui, sans-serif;
+}
+
+a { color: inherit; text-decoration: none; }
+button, input, textarea { font: inherit; }
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 20px 72px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid rgba(17,38,61,0.08);
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(12px);
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(17,38,61,0.06);
+  font-weight: 700;
+}
+
+.brand-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red), var(--gold));
+  position: relative;
+  box-shadow: 0 0 0 6px rgba(217,77,74,0.12);
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px solid rgba(255,255,255,0.9);
+  border-radius: 50%;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: rgba(45,111,95,0.08);
+  color: var(--green);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.status-pill .dot {
+  width: 9px;
+  height: 9px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(45,111,95,0.12);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.hero-copy {
+  background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.72));
+  border: 1px solid rgba(17,38,61,0.08);
+  border-radius: var(--radius);
+  padding: clamp(20px, 4vw, 36px);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(240,183,68,0.16);
+  color: #916500;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font: 700 clamp(32px, 5vw, 58px)/1.06 "Noto Serif", serif;
+  margin: 12px 0 14px;
+}
+
+.lead {
+  margin: 0;
+  max-width: 56ch;
+  font-size: clamp(17px, 2vw, 22px);
+  color: rgba(17,38,61,0.82);
+}
+
+.quick-meta {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.quick-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.quick-meta span::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red), var(--gold));
+}
+
+.hero-visual {
+  position: relative;
+  background: linear-gradient(160deg, rgba(17,38,61,0.96), rgba(35,73,99,0.96));
+  border-radius: var(--radius);
+  min-height: 320px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.hero-visual::before {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: -40px;
+  top: -50px;
+  border-radius: 50%;
+  background: rgba(240,183,68,0.18);
+}
+
+.visual-panel {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sh {
+  width: 180px;
+  height: 180px;
+  display: block;
+  margin: 10px auto 0;
+}
+.sh .ring { fill: none; stroke: rgba(255,255,255,0.8); stroke-width: 7; }
+.sh .bars { fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 5; stroke-linecap: round; transform-origin: 100px 100px; }
+.sh .sun { fill: #f5c65c; }
+.speaking .bars { animation: spin 6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.visual-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #edf4ff;
+}
+
+.visual-card small {
+  display: block;
+  color: rgba(237,244,255,0.72);
+}
+
+.visual-card strong {
+  display: block;
+  font-size: 1.5rem;
+  margin-top: 3px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1.4fr 0.6fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(17,38,61,0.08);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.editor-panel { padding: 22px; }
+
+label.t {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-size: 1.02rem;
+}
+
+textarea {
+  width: 100%;
+  min-height: 210px;
+  resize: vertical;
+  font: inherit;
+  font-size: 19px;
+  line-height: 1.6;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(244,247,251,0.9);
+  color: var(--ink);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+textarea:focus,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(240,183,68,0.5);
+  outline-offset: 3px;
+}
+textarea:focus {
+  border-color: rgba(240,183,68,0.65);
+  box-shadow: 0 0 0 6px rgba(240,183,68,0.08);
+}
+
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+.row .sp { flex: 1; }
+
+button {
+  appearance: none;
+  border: 1px solid rgba(17,38,61,0.12);
+  background: var(--panel-strong);
+  color: var(--ink);
+  padding: 11px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+button:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(17,38,61,0.08); }
+button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+
+button.go {
+  background: linear-gradient(135deg, var(--red), #b93835);
+  border-color: transparent;
+  color: #fff;
+  padding: 12px 26px;
+  font-size: 18px;
+}
+button.go:hover { background: linear-gradient(135deg, #d64b47, #a92f2d); }
+
+.ch button {
+  min-width: 44px;
+  padding: 8px 12px;
+  font-size: 19px;
+}
+
+.small { font-size: 15px; color: var(--green); font-weight: 700; }
+
+#cnt { color: var(--ink); }
+
+#msg {
+  min-height: 1.7em;
+  margin: 16px 0 0;
+  font-weight: 700;
+  color: var(--green);
+}
+#msg.err { color: var(--red); }
+
+audio {
+  width: 100%;
+  margin-top: 16px;
+  border-radius: 12px;
+}
+audio[hidden]{ display:none; }
+
+.speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(17,38,61,0.03);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+.speed input[type="range"] { accent-color: var(--red); }
+
+.side-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.info-card {
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(240,183,68,0.08), rgba(255,255,255,0.70));
+  border: 1px solid rgba(17,38,61,0.08);
+  border-radius: 18px;
+}
+
+.info-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+}
+
+.stack-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.stack-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid var(--line);
+}
+
+.stack-list li::before {
+  content: "✓";
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(45,111,95,0.12);
+  color: var(--green);
+  font-weight: 800;
+}
+
+section h2 {
+  font: 700 30px/1.2 "Noto Serif", serif;
+  margin: 50px 0 18px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.feature-card {
+  background: var(--panel);
+  border: 1px solid rgba(17,38,61,0.08);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.feature-card strong {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+ol.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: s;
+}
+
+ol.steps li {
+  counter-increment: s;
+  position: relative;
+  padding: 0 0 26px 70px;
+  border-left: 2px solid var(--line);
+  margin-left: 18px;
+}
+ol.steps li:last-child { border-color: transparent; }
+ol.steps li::before {
+  content: counter(s);
+  position: absolute;
+  top: 0;
+  left: -21px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ink), #2e5474);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font: 700 19px "Noto Serif", serif;
+}
+ol.steps b { display: block; font-size: 1.08rem; margin-bottom: 4px; }
+
+.tips {
+  columns: 2;
+  column-gap: 30px;
+}
+
+.tips p {
+  break-inside: avoid;
+  margin: 0 0 16px;
+  padding: 18px 18px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 12px 0;
+}
+
+details {
+  border-top: 1px solid var(--line);
+  padding: 0 0 10px;
+}
+
+details p { margin: 0; padding-bottom: 12px; }
+
+footer {
+  margin-top: 52px;
+  color: var(--green);
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 980px) {
+  .workspace,
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .feature-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .wrap { padding-left: 14px; padding-right: 14px; }
+  .topbar { flex-direction: column; align-items: flex-start; }
+  .brand { width: 100%; justify-content: center; }
+  .tips { columns: 1; }
+  .quick-meta { gap: 8px; }
+  .quick-meta span { flex: 1 1 calc(50% - 8px); justify-content: center; }
+  .row { align-items: stretch; }
+  .row > * { width: 100%; }
+  .speed { justify-content: space-between; width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span> Kyrgyz Voice</div>
+    <div class="status-pill"><span class="dot" aria-hidden="true"></span> Кыргызча синтез</div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="eyebrow">AI voice lab</span>
+      <h1>Кыргызча үн синтезатору</h1>
+      <p class="lead">Текст жазыңыз — синтезатор аны таза кыргыз тилинде окуп берет. Үндү угуп, компьютериңизге же телефонуңузга сактап алсаңыз болот.</p>
+      <div class="quick-meta" aria-label="Өзгөчөлүктөр">
+        <span>2000 белги</span>
+        <span>WAV сактоо</span>
+        <span>Ылдамдык</span>
+      </div>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="visual-panel">
+        <svg class="sh" viewBox="0 0 200 200" role="img" aria-label="Шаңырак">
+          <circle class="ring" cx="100" cy="100" r="90"/>
+          <g class="bars">
+            <g id="pair"><path d="M20 100 C55 40 145 40 180 100"/><path d="M20 100 C55 160 145 160 180 100"/></g>
+            <use href="#pair" transform="rotate(60 100 100)"/><use href="#pair" transform="rotate(120 100 100)"/>
+          </g>
+          <circle class="sun" cx="100" cy="100" r="13"/>
+        </svg>
+
+        <div class="visual-card">
+          <div>
+            <small>Көрсөтүү</small>
+            <strong>Кыргызча</strong>
+          </div>
+          <div>
+            <small>Үн</small>
+            <strong>WAV</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <section class="panel editor-panel" aria-labelledby="text-panel-heading">
+      <label class="t" id="text-panel-heading" for="txt">Текстиңизди ушул жерге жазыңыз</label>
+      <textarea id="txt" maxlength="2000" lang="ky" placeholder="Мисалы: Саламатсызбы! Менин атым Айжан. Мен Кыргызстанда жашайм."></textarea>
+      <div class="row ch" aria-label="Атайын тамгалар">
+        <span class="small">Атайын тамгалар:</span>
+        <button type="button" data-ch="ң">ң</button><button type="button" data-ch="ө">ө</button><button type="button" data-ch="ү">ү</button>
+        <span class="sp"></span><span class="small"><span id="cnt">0</span> / 2000 белги</span>
+      </div>
+      <div class="row">
+        <span class="small">Үлгү тексттер:</span>
+        <button type="button" data-ex="Ала-Тоо — биздин сыймыгыбыз. Кыргызстан — тоолордун өлкөсү.">Ала-Тоо</button>
+        <button type="button" data-ex="Саламатсызбы! Бүгүн аба ырайы абдан жакшы. Келгиле, чогуу сейилдеп чыгалы.">Саламатташуу</button>
+        <button type="button" data-ex="Бишкектен Ысык-Көлгө чейин төрт жүз элүү километр жол.">Сандар</button>
+      </div>
+      <div class="row">
+        <button class="go" id="go" type="button">Үндөт</button>
+        <button id="stop" type="button" disabled>Токтот</button>
+        <a id="dl" download="kyrgyz-voice.wav" hidden><button type="button">Жүктөп алуу (WAV)</button></a>
+        <span class="sp"></span>
+        <label class="speed small" for="spd">Ылдамдык <input id="spd" type="range" min="0.7" max="1.3" step="0.05" value="1"> <span id="spdv">1.0×</span></label>
+      </div>
+      <p id="msg" role="status" aria-live="polite"></p>
+      <audio id="au" controls hidden></audio>
+    </section>
+
+    <aside class="side-stack">
+      <div class="info-card panel">
+        <h3>Негизги артыкчылыктары</h3>
+        <ul class="stack-list">
+          <li>Кыргыз тилинде таза окулат</li>
+          <li>WAV менен сакталат</li>
+          <li>Ылдамдыкты жөнгө салат</li>
+        </ul>
+      </div>
+
+      <div class="info-card panel">
+        <h3>Тез жардам</h3>
+        <ul class="stack-list">
+          <li>Тамгаларды туура жазыңыз</li>
+          <li>Жайыраак сүйлөмдөрдү алыңыз</li>
+          <li>Үн калыпты болушун текшериңиз</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+<section aria-labelledby="how">
+  <h2 id="how">Кантип колдонуу керек</h2>
+  <ol class="steps">
+    <li><b>Текст жазыңыз</b>Жогорудагы кутучага каалаган кыргызча текстти жазыңыз же башка жерден көчүрүп жабыштырыңыз. Бир жолу 2000 белгиге чейин болот.</li>
+    <li><b>Атайын тамгаларды колдонуңуз</b>Клавиатурада <i>ң, ө, ү</i> тамгалары жок болсо, кутучанын астындагы «ң», «ө», «ү» баскычтарын басыңыз — тамга курсор турган жерге коюлат.</li>
+    <li><b>«Үндөт» баскычын басыңыз</b>Бир нече секунд күтүңүз. Үн даяр болгондо өзү ойной баштайт. Узун тексттерде күтүү убактысы көбүрөөк болот.</li>
+    <li><b>Ылдамдыкты тууралаңыз</b>Үн тез же жай угулса, «Ылдамдык» сызгычын жылдырыңыз. Үндү кайра түзүүнүн кереги жок.</li>
+    <li><b>Үндү сактап алыңыз</b>«Жүктөп алуу (WAV)» баскычы аркылуу аудио файлды компьютериңизге же телефонуңузга сактасаңыз болот.</li>
+  </ol>
+
+  <h2>Жакшы угулуш үчүн кеңештер</h2>
+  <div class="tips">
+    <p><b>Сүйлөмдөрдү кыска жазыңыз.</b> Ар бир сүйлөмдүн аягына чекит, илептөө же суроо белгисин коюңуз — ошондо үн так токтоп, туура интонация менен окулат.</p>
+    <p><b>Тамгаларды туура жазыңыз.</b> «Өзбекстан», «күн», «ыңгайлуу» сыяктуу сөздөрдө ө, ү, ң тамгалары болушу керек. «Озбекстан» деп жазсаңыз, үн башкача чыгат.</p>
+    <p><b>Сандарды цифра менен жазсаңыз болот.</b> «450» деп жазсаңыз, синтезатор өзү «төрт жүз элүү» деп окуйт.</p>
+    <p><b>Орус же англис тамгаларын колдонбоңуз.</b> Синтезатор кыргыз алфавитиндеги тамгаларды гана окуйт, калгандары өткөрүлүп кетет.</p>
+  </div>
+
+  <h2>Көп берилүүчү суроолор</h2>
+  <details><summary>Үн чыкпай жатат</summary><p>Түзмөгүңүздө үн өчүк эмес экенин текшериңиз. Андан соң бетти жаңыртып, «Үндөт» баскычын кайра басыңыз. Эгер кызыл билдирүү чыкса, синтезатордун сервери иштебей жатат — сайттын ээсине кайрылыңыз.</p></details>
+  <details><summary>Айрым сөздөр туура окулбай жатат</summary><p>Сөздү тамга-тамгасы менен туура жазганыңызды текшериңиз. Кыска аббревиатураларды (мисалы, КР) толук жазыңыз: «Кыргыз Республикасы».</p></details>
+  <details><summary>Канча текст жазууга болот?</summary><p>Бир жолу 2000 белгиге чейин. Узун текстти бөлүктөргө бөлүп, ар бирин өзүнчө үндөтүңүз.</p></details>
+</section>
+<footer>Үн кыргыз тилиндеги сүйлөөчүнүн жазууларында үйрөтүлгөн Meta MMS моделинен түзүлөт.</footer>
+</div>
+
+<script>
+const API_URL = "/api/tts"; // сервер дареги. Башка доменде болсо, толук даректи жазыңыз
+const $ = id => document.getElementById(id);
+const txt = $("txt"), au = $("au"), go = $("go"), stopB = $("stop"), dl = $("dl"), msg = $("msg"), app = $("app");
+let objUrl = null, lastKey = "", ctrl = null;
+
+function say(t, err){ msg.textContent = t; msg.className = err ? "err" : ""; }
+function counter(){ $("cnt").textContent = txt.value.length; }
+txt.addEventListener("input", counter);
+
+document.querySelectorAll("[data-ch]").forEach(b => b.onclick = () => {
+  const s = txt.selectionStart, e = txt.selectionEnd;
+  txt.setRangeText(b.dataset.ch, s, e, "end"); txt.focus(); counter();
+});
+document.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => { txt.value = b.dataset.ex; counter(); txt.focus(); });
+
+$("spd").oninput = e => { const v = +e.target.value; $("spdv").textContent = v.toFixed(1) + "×"; au.playbackRate = v; au.preservesPitch = true; };
+
+au.onplay = () => { app.classList.add("speaking"); stopB.disabled = false; };
+au.onpause = au.onended = () => { app.classList.remove("speaking"); stopB.disabled = true; };
+stopB.onclick = () => { au.pause(); au.currentTime = 0; window.speechSynthesis && speechSynthesis.cancel(); app.classList.remove("speaking"); stopB.disabled = true; };
+
+function playBlob(blob){
+  if (objUrl) URL.revokeObjectURL(objUrl);
+  objUrl = URL.createObjectURL(blob);
+  au.src = objUrl; au.hidden = false; dl.href = objUrl; dl.hidden = false;
+  au.playbackRate = +$("spd").value; au.preservesPitch = true;
+  return au.play();
+}
+
+function browserVoice(text){
+  const v = window.speechSynthesis && speechSynthesis.getVoices().find(x => x.lang.toLowerCase().startsWith("ky"));
+  if (!v) return false;
+  const u = new SpeechSynthesisUtterance(text); u.voice = v; u.lang = v.lang; u.rate = +$("spd").value;
+  u.onstart = () => { app.classList.add("speaking"); stopB.disabled = false; };
+  u.onend = () => { app.classList.remove("speaking"); stopB.disabled = true; };
+  speechSynthesis.speak(u); say("Үн браузердин кыргыз үнү менен окулуп жатат."); return true;
+}
+
+go.onclick = async () => {
+  const text = txt.value.trim();
+  if (!text){ say("Текст бош. Алгач бир нерсе жазыңыз.", true); txt.focus(); return; }
+  if (text === lastKey && au.src){ au.currentTime = 0; au.play(); return; }
+  go.disabled = true; say("Үн даярдалууда… бир аз күтүңүз."); au.pause();
+  ctrl = new AbortController();
+  try{
+    const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({text}), signal:ctrl.signal});
+    if (!r.ok) throw new Error(r.status === 400 ? "bad" : "srv");
+    await playBlob(await r.blob()); lastKey = text; say("Даяр! Үн ойноп жатат.");
+  }catch(e){
+    if (e.message === "bad") say("Текст кыргызча тамгалар менен жазылышы керек.", true);
+    else if (!browserVoice(text)) say("Синтезатордун сервери менен байланыш жок. Бир аздан кийин кайра аракет кылыңыз.", true);
+  }finally{ go.disabled = false; }
+};
+counter();
+</script>
+</body>
+</html>
